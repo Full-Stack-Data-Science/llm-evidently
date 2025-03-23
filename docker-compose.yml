@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  llm-monitor:
+    build:
+      context: ./llm_monitor
+      dockerfile: Dockerfile
+    container_name: llm-monitor
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # FastAPI app
+      - "8099:8099"  # Metrics
+    networks:
+      - monitoring
+    environment:
+      - OPENAI_API_KEY=your-api-key  # Replace with your key
+    volumes:
+      - ./llm_logs:/app  # Persist logs and reports
+
+  prometheus:
+    image: prom/prometheus:v2.38.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/config/alert-rules.yml:/etc/prometheus/alert-rules.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - monitoring
+
+  grafana:
+    image: grafana/grafana:9.0.5
+    container_name: grafana
+    restart: unless-stopped
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/config/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./grafana/config/datasources.yaml:/etc/grafana/provisioning/datasources/datasource.yaml:ro
+      - ./grafana/dashboards:/opt/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_USER=fsds
+      - GF_SECURITY_ADMIN_PASSWORD=fsds
+    ports:
+      - "3000:3000"
+    networks:
+      - monitoring
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f localhost:3000/api/health && echo 'ready'"]
+      interval: 10s
+      retries: 10
+
+networks:
+  monitoring:
+    driver: bridge
+
+volumes:
+  llm_logs:  # Named volume for log persistence
+  prometheus_data:
+  grafana_data:
