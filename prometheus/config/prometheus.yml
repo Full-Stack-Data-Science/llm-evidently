@@ -2,10 +2,22 @@ global:
   scrape_interval: 10s
   evaluation_interval: 10s
 
+# For local testing
+# scrape_configs:
+#   - job_name: 'llm-monitor'
+#     scrape_interval: 10s
+#     static_configs:
+#       - targets: ['host.docker.internal:8099']
+
 scrape_configs:
   - job_name: 'llm-monitor'
+    scrape_interval: 10s
     static_configs:
-      - targets: ['llm-monitor:8099']
+      - targets: ['llm-monitor:8099']  # Docker service name
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
 
 rule_files:
   - alert-rules.yml
