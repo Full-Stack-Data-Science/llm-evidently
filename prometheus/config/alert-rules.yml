@@ -1,0 +1,19 @@
+groups:
+- name: llm_monitor_alerts
+  rules:
+  - alert: HighLLMDenialRate
+    expr: llm_denial_rate > 0.10
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "High denial rate in LLM responses"
+      description: "The denial rate has exceeded 10% for over 1 minute. Current value: {{ $value | humanizePercentage }}."
+  - alert: LowLLMResponseLength
+    expr: llm_avg_response_length < 50
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "Low average response length in LLM"
+      description: "The average response length has been below 50 characters for over 1 minute. Current value: {{ $value | humanize }} characters."
